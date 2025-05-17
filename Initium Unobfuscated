@@ -1,0 +1,512 @@
+// @name Initium
+// @Version 11
+// @description ?
+// @match ://.core.learn.edgenuity.com/*
+// @match ://student.edgenuity.com/
+// @grant GM_getValue
+// @grant GM_setValue
+// ==/UserScript==
+
+(function () {
+'use strict';
+
+if (window.self === window.top) {
+    window.addEventListener("load", () => {
+        const menuButton = document.getElementById("initiumMenuButton");
+        menuButton.style.display = GM_getValue("menuButtonHidden", false) ? "none" : "block";
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (event.shiftKey && event.key === "Z") {
+            const menuContainer = document.getElementById("initiumMenuContainer");
+            const backgroundOverlay = document.getElementById("initiumBackgroundOverlay");
+
+            if (menuContainer.style.display === "none") {
+                menuContainer.style.display = "block";
+                backgroundOverlay.style.display = "block";
+            } else {
+                menuContainer.style.display = "none";
+                backgroundOverlay.style.display = "none";
+            }
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.shiftKey && event.key === "D") {
+            const menuButton = document.getElementById("initiumMenuButton");
+            const isHidden = menuButton.style.display === "none" || menuButton.style.display === "";
+            menuButton.style.display = isHidden ? "block" : "none";
+            GM_setValue("menuButtonHidden", !isHidden);
+        }
+    });
+
+    const menuButton = document.createElement("button");
+    menuButton.id = "initiumMenuButton";
+    menuButton.style.position = "fixed";
+    menuButton.style.bottom = "20px";
+    menuButton.style.right = "20px";
+    menuButton.style.zIndex = "9999";
+    menuButton.style.background = "transparent";
+    menuButton.style.border = "none";
+    menuButton.style.padding = "20px";
+    menuButton.style.cursor = "pointer";
+    menuButton.style.backgroundImage = 'url("https://cdn.discordapp.com/attachments/1125852090477051975/1182877216690942074/Y.png")';
+    menuButton.style.backgroundSize = "contain";
+    const storedYPosition = GM_getValue("menuButtonYPosition", "20px");
+    menuButton.style.bottom = storedYPosition;
+    document.body.appendChild(menuButton);
+
+    let isDragging = false;
+    let startY = 0;
+
+    menuButton.addEventListener("mousedown", (e) => {
+        isDragging = true;
+        startY = e.clientY;
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+            const deltaY = startY - e.clientY;
+            const newY = parseInt(menuButton.style.bottom) + deltaY;
+
+            const minHeight = 20;
+            const maxHeight = window.innerHeight - menuButton.clientHeight - 20;
+
+            const constrainedY = Math.min(maxHeight, Math.max(minHeight, newY));
+
+            menuButton.style.bottom = `${constrainedY}px`;
+            startY = e.clientY;
+
+            GM_setValue("menuButtonYPosition", `${constrainedY}px`);
+        }
+    });
+
+    document.addEventListener("mouseup", () => {
+        isDragging = false;
+    });
+
+    const backgroundOverlay = document.createElement("div");
+    backgroundOverlay.id = "initiumBackgroundOverlay";
+    backgroundOverlay.style.display = "none";
+    backgroundOverlay.style.position = "fixed";
+    backgroundOverlay.style.top = "0";
+    backgroundOverlay.style.left = "0";
+    backgroundOverlay.style.width = "100%";
+    backgroundOverlay.style.height = "100%";
+    backgroundOverlay.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
+    backgroundOverlay.style.zIndex = "9998";
+    backgroundOverlay.style.backdropFilter = "grayscale(100%)";
+    document.body.appendChild(backgroundOverlay);
+
+    backgroundOverlay.addEventListener("click", () => {
+        toggleMenu();
+    });
+
+    const menuContainer = document.createElement("div");
+    menuContainer.id = "initiumMenuContainer";
+    menuContainer.style.display = "none";
+    menuContainer.style.position = "fixed";
+    menuContainer.style.fontFamily = "Roboto, sans-serif";
+    menuContainer.style.userSelect = 'none';
+    menuContainer.style.top = "50%";
+    menuContainer.style.background = "linear-gradient(45deg, #001424, #2A87DE)";
+    menuContainer.style.left = "50%";
+    menuContainer.style.transform = "translate(-50%, -50%)";
+    menuContainer.style.zIndex = "9999";
+    menuContainer.style.width = "400px";
+    menuContainer.style.padding = "30px";
+    menuContainer.style.color = "#FFF";
+    menuContainer.style.borderRadius = "10px";
+    menuContainer.style.boxShadow = "0px 0px 10px rgba(0, 0, 0, 0.5)";
+    menuContainer.style.transition = "transform 0.2s ease-in-out";
+    document.body.appendChild(menuContainer);
+
+    const titleElement = document.createElement("h2");
+    titleElement.style.textAlign = "center";
+    titleElement.style.marginBottom = "10px";
+    titleElement.style.fontWeight = "100";
+    titleElement.style.fontSize = "24px";
+    titleElement.textContent = "⸻ Initium 1.0 ⸻";
+    menuContainer.appendChild(titleElement);
+
+    const applyBtn = document.createElement("button");
+    applyBtn.textContent = "Apply changes?";
+    applyBtn.style.marginTop = "10px";
+    applyBtn.style.padding = "5px 10px";
+    applyBtn.style.backgroundColor = "#111";
+    applyBtn.style.color = "#FFF";
+    applyBtn.style.border = "none";
+    applyBtn.style.borderRadius = "5px";
+    applyBtn.style.cursor = "pointer";
+    applyBtn.style.border = "1px solid transparent";
+    applyBtn.style.transition = "border-color 0.1s ease-out";
+
+    applyBtn.addEventListener("mouseenter", () => {
+        applyBtn.style.borderColor = "#FFF";
+    });
+
+    applyBtn.addEventListener("mouseleave", () => {
+        applyBtn.style.borderColor = "transparent";
+    });
+    applyBtn.addEventListener("click", () => {
+        location.reload();
+    });
+    menuContainer.appendChild(applyBtn);
+
+    const minDelayContainer = document.createElement("div");
+    minDelayContainer.style.display = "flex";
+    minDelayContainer.style.flexDirection = "row";
+
+    const minDelayInput = document.createElement("input");
+    minDelayInput.type = "number";
+    minDelayInput.value = GM_getValue("minDelay", 500); 
+    minDelayInput.placeholder = "Set minimum delay (24s recommended)";
+    minDelayInput.style.marginTop = "10px";
+    minDelayInput.style.padding = "5px 10px";
+    minDelayInput.style.border = "none";
+    minDelayInput.style.borderRadius = "5px";
+    minDelayInput.style.flex = "1"; 
+    minDelayInput.style.backgroundColor = "#111"; 
+    minDelayInput.style.color = "#FFF"; 
+    minDelayContainer.appendChild(minDelayInput);
+
+    const setMinDelayButton = document.createElement("button");
+    setMinDelayButton.textContent = "Set Min Delay";
+    setMinDelayButton.style.marginTop = "10px";
+    setMinDelayButton.style.marginLeft = "10px";
+    setMinDelayButton.style.padding = "5px 10px";
+    setMinDelayButton.style.backgroundColor = "#111";
+    setMinDelayButton.style.color = "#FFF";
+    setMinDelayButton.style.border = "none";
+    setMinDelayButton.style.borderRadius = "5px";
+    setMinDelayButton.style.cursor = "pointer";
+    setMinDelayButton.addEventListener("click", () => {
+        const newMinDelay = parseInt(minDelayInput.value, 10) || 500;
+        GM_setValue("minDelay", newMinDelay);
+    });
+
+    minDelayContainer.appendChild(setMinDelayButton);
+
+    menuContainer.appendChild(minDelayContainer);
+
+    const maxDelayContainer = document.createElement("div");
+    maxDelayContainer.style.display = "flex";
+    maxDelayContainer.style.flexDirection = "row";
+
+    const maxDelayInput = document.createElement("input");
+    maxDelayInput.type = "number";
+    maxDelayInput.value = GM_getValue("maxDelay", 1000); 
+    maxDelayInput.placeholder = "Set maximum delay (36s recommended)";
+    maxDelayInput.style.marginTop = "10px";
+    maxDelayInput.style.padding = "5px 10px";
+    maxDelayInput.style.border = "none";
+    maxDelayInput.style.borderRadius = "5px";
+    maxDelayInput.style.flex = "1"; 
+    maxDelayInput.style.backgroundColor = "#111"; 
+    maxDelayInput.style.color = "#FFF"; 
+    maxDelayContainer.appendChild(maxDelayInput);
+
+    const setMaxDelayButton = document.createElement("button");
+    setMaxDelayButton.textContent = "Set Max Delay";
+    setMaxDelayButton.style.marginTop = "10px";
+    setMaxDelayButton.style.marginLeft = "10px";
+    setMaxDelayButton.style.padding = "5px 10px";
+    setMaxDelayButton.style.backgroundColor = "#111";
+    setMaxDelayButton.style.color = "#FFF";
+    setMaxDelayButton.style.border = "none";
+    setMaxDelayButton.style.borderRadius = "5px";
+    setMaxDelayButton.style.cursor = "pointer";
+    setMaxDelayButton.addEventListener("click", () => {
+        const newMaxDelay = parseInt(maxDelayInput.value, 10) || 1000;
+        GM_setValue("maxDelay", newMaxDelay);
+    });
+
+    maxDelayContainer.appendChild(setMaxDelayButton);
+
+    menuContainer.appendChild(maxDelayContainer);
+
+    const toggleMenu = () => {
+        const display = menuContainer.style.display === "none" ? "block" : "none";
+        menuContainer.style.display = display;
+        backgroundOverlay.style.display = display;
+    };
+
+    menuButton.addEventListener("click", toggleMenu);
+
+    const settings = {
+        autoAnswer: GM_getValue("autoAnswer", true),
+        autoStart: GM_getValue("autoStart", false),
+        autoComplete: GM_getValue("autoComplete", false),
+        autoSubmit: GM_getValue("autoSubmit", false),
+    };
+
+    const buttonList = document.createElement("ul");
+    buttonList.style.listStyleType = "none";
+    buttonList.style.padding = "0";
+
+    const buttonLabels = {
+        autoAnswer: "Auto Answer",
+        autoStart: "Auto Start",
+        autoComplete: "Auto Complete",
+        autoSubmit: "Auto Submit",
+    };
+
+    const buttonDescriptions = {
+        autoAnswer: "Automatically answers questions.",
+        autoStart: "Automatically starts any quizzes.",
+        autoComplete: "Automatically completes questions on assignments when answered.",
+        autoSubmit: "Automatically submits quizzes."
+    };
+
+    for (const setting in settings) {
+        if (settings.hasOwnProperty(setting)) {
+            const button = document.createElement("button");
+            button.className = "setting-button";
+            button.textContent = buttonLabels[setting];
+            button.title = buttonDescriptions[setting];
+            button.style.marginTop = "10px";
+            button.style.padding = "5px 15px 5px 40px";
+            button.style.backgroundColor = "#111";
+            button.style.color = "#FFF";
+            button.style.border = "none";
+            button.style.borderRadius = "5px";
+            button.style.cursor = "pointer";
+            button.style.display = "block";
+            button.style.width = "100%";
+            button.style.textAlign = "left";
+
+            const imageUrls = {
+                autoAnswer: "https://cdn.discordapp.com/attachments/1125852090477051975/1182881314471428207/5.png",
+                autoStart: 'https://cdn.discordapp.com/attachments/1125852090477051975/1182881313892601896/q.png',
+                autoComplete: 'https://cdn.discordapp.com/attachments/1125852090477051975/1183038030433497138/p.png',
+                autoSubmit: 'https://cdn.discordapp.com/attachments/1125852090477051975/1183042721812860928/3.png'
+            };
+
+            button.style.border = "1px solid transparent";
+            button.style.transition = "border-color 0.1s ease-out";
+
+            button.addEventListener("mouseenter", () => {
+                button.style.borderColor = "#FFF";
+            });
+
+            button.addEventListener("mouseleave", () => {
+                button.style.borderColor = "transparent";
+            });
+
+            button.style.backgroundImage = `url('${imageUrls[setting]}')`;
+            button.style.backgroundSize = "30px 30px";
+            button.style.backgroundRepeat = "no-repeat";
+            button.style.backgroundPosition = "10px center";
+
+            const enabledIndicator = document.createElement("img");
+            enabledIndicator.src = "https://raw.githubusercontent.com/Databones/Edgesploit/main/img/enabled.png";
+            enabledIndicator.alt = "enabled";
+            enabledIndicator.style.width = "20%";
+
+            const disabledIndicator = document.createElement("img");
+            disabledIndicator.src = "https://raw.githubusercontent.com/Databones/Edgesploit/main/img/disabled.png";
+            disabledIndicator.alt = "disabled";
+            disabledIndicator.style.width = "20%";
+
+            button.appendChild(enabledIndicator);
+            button.appendChild(disabledIndicator);
+
+            enabledIndicator.style.display = settings[setting] ? "inline" : "none";
+            disabledIndicator.style.display = settings[setting] ? "none" : "inline";
+
+            button.addEventListener("click", () => {
+                settings[setting] = !settings[setting];
+                GM_setValue(setting, settings[setting]);
+
+                enabledIndicator.style.display = settings[setting] ? "inline" : "none";
+                disabledIndicator.style.display = settings[setting] ? "none" : "inline";
+            });
+
+            const listItem = document.createElement("li");
+            listItem.appendChild(button);
+            buttonList.appendChild(listItem);
+        }
+    }
+
+    menuContainer.appendChild(buttonList);
+
+};
+
+let answerClicked = false;
+
+async function getAnswersFromStorage() {
+    const storedAnswers = GM_getValue("answers");
+
+    if (storedAnswers) {
+        return storedAnswers;
+    }
+
+    return new Promise(async (resolve, reject) => {
+        const answersText = prompt("Paste your answers text here:");
+
+        if (answersText) {
+            GM_setValue("answers", answersText);
+            resolve(answersText);
+        } else {
+            reject(new Error("No answer text entered. You need to paste the answers in."));
+        }
+    });
+}
+
+function answerQuiz() {
+    const processElements = (elements) => {
+        elements.forEach((element) => {
+            const id = element.getAttribute("for") || element.getAttribute("id");
+            if (id && answerIDs.includes(id.trim())) {
+                if (element.tagName === "LABEL") {
+                    element.click();
+                } else if (element.tagName === "OPTION") {
+                    element.selected = true;
+                } else if (element.tagName === "INPUT" && element.type === "checkbox") {
+                    element.checked = true;
+                } else if (element.tagName === "INPUT" && element.type === "text") {
+                    const answerText = getAnswerTextById(id.trim());
+                    if (answerText) {
+                        element.value = answerText;
+                    }
+                }
+            }
+        });
+    };
+
+    const parentElement = document.body; 
+
+    const querySelectors = [
+        ".answer-choice-label[for]",
+        "option[id]",
+        "input[type='checkbox'][id]",
+        "input[type='text'][id]"
+    ];
+
+    const elementsToClick = [];
+
+    querySelectors.forEach((selector) => {
+        elementsToClick.push(...parentElement.querySelectorAll(selector));
+    });
+
+    const iframe = document.querySelector("iframe");
+
+    if (iframe && iframe.contentDocument) {
+        const iframeElements = [];
+
+        querySelectors.forEach((selector) => {
+            iframeElements.push(...iframe.contentDocument.querySelectorAll(selector));
+        });
+
+        elementsToClick.push(...iframeElements);
+    }
+
+    processElements(elementsToClick);
+}
+
+function getAnswerTextById(id) {
+    const answers = answerIDs.split("\n");
+    for (const answer of answers) {
+        const [answerId, answerText] = answer.split(":");
+        if (answerId.trim() === id.trim()) {
+            return answerText.trim().replace(/"/g, ''); // Remove quotation marks
+        }
+    }
+    return null;
+}
+
+let answerIDs = [];
+
+getAnswersFromStorage().then((answerIDsFromStorage) => {
+    answerIDs = answerIDsFromStorage;
+});
+
+function justAnswer() {
+    answerQuiz();
+    clickNextButton();
+    if (settings.autoComplete) {
+        function setRandomInterval(callback, minDelay, maxDelay) {
+            return setInterval(callback, Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay);
+        }
+
+        setRandomInterval(autoComplete, GM_getValue("minDelay", 24000) * 1000, GM_getValue("maxDelay", 360000) * 1000);
+    }
+}
+
+function autoComplete() {
+    const api = document.getElementsByName('stageFrame')[0]?.contentWindow?.API;
+
+    api.Frame.check();
+}
+
+function clickNextButton() {
+    const nextButton = document.getElementById('nextQuestion');
+    if (nextButton) {
+        nextButton.click();
+    }
+}
+
+function clickOverlayAttemptButton() {
+    const overlayButton = document.querySelector('.overlay-attempt.overlay-attempt-clickable');
+    const activityStatusElement = document.querySelector('#activity-status');
+    const activityStatus = activityStatusElement ? activityStatusElement.textContent.trim() : '';
+
+    if (overlayButton && !['complete', 'bypassed'].includes(activityStatus)) {
+        overlayButton.click();
+    }
+};
+
+function checkAndClick() {
+
+    const iframe = document.querySelector('iframe#stageFrame');
+
+    if (!iframe) {
+        return;
+    }
+
+    const navBtnList = iframe.contentDocument?.querySelector('#navBtnList');
+
+    if (!navBtnList) {
+        return;
+    }
+
+    const buttonsSelector = 'li:not(:has([class~="plainbtn"].alt.icon)) a.plainbtn.alt.icon';
+    const buttons = navBtnList.querySelectorAll(buttonsSelector);
+
+    if (buttons.length === 0) {
+        const buttonSelectors = ['#submit', '.submit', 'span.uibtn.uibtn-blue.uibtn-med.submit'];
+
+        const button = buttonSelectors
+        .map(selector => iframe.contentDocument?.querySelector(selector))
+        .find(button => button);
+
+        if (button) {
+            button.click();
+        }
+    }
+
+}
+
+const settings = {
+    autoAnswer: GM_getValue("autoAnswer", true),
+    autoStart: GM_getValue("autoStart", false),
+    autoComplete: GM_getValue("autoComplete", false),
+    autoSubmit: GM_getValue("autoSubmit", false)
+};
+
+if (settings.autoStart) {
+    setInterval(clickOverlayAttemptButton, 1000);
+}
+
+if (settings.autoSubmit) {
+    setInterval(checkAndClick, 750);
+}
+
+if (settings.autoAnswer) {
+    function setRandomInterval(callback, minDelay, maxDelay) {
+        return setInterval(callback, Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay);
+    }
+
+    setRandomInterval(justAnswer, GM_getValue("minDelay", 24000) * 1000, GM_getValue("maxDelay", 360000) * 1000);
+}
+})();
