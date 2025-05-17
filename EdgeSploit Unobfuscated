@@ -1,0 +1,335 @@
+// ==UserScript==
+// @name         Edgesploit v1.5 (Unobfuscated)
+// @version      1.5BETA
+// @namespace    discord.gg/Syv3U49RKX (Edgesploit & EdgenLeaks discord server)
+// @description  Edgenuity does not care about your user experience. We do. Spread this script to your classmates in protest of Edgenuity purposely staying as an outdated, unfulfilling platform! :)
+// @author       Databones
+// @match        *://*.core.learn.edgenuity.com/*
+// @grant        GM_addStyle
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @icon         https://cdn.discordapp.com/attachments/1125852090477051975/1125853004168446022/Edgesploit.png
+// ==/UserScript==
+
+  // - - - v SETTINGS v - - - //
+
+var settings = {
+  activityAdvance: false,
+  activityAdvanceSpeed: 1500,
+  frameAdvance: true,
+  frameAdvanceClickSpeed: 500,
+  answerGuesser: true,
+  skipIntros: true,
+  frameBypass: true,
+  duplicateTabs: true,
+  showColumns: true,
+  columnSpeed: 1000,
+  autoVocab: true,
+  vocabFillerSpeed: 1000,
+  antiLogout: true,
+  antiLogoutSpeed: 1500,
+  labAdvance: true,
+  labAdvanceSpeed: 300,
+  themes: {
+    enabled: true,
+    imageUrl:
+      'https://cdn.discordapp.com/attachments/1125852090477051975/1129372911589916712/hi.webp',
+  },
+}
+;(function () {
+  'use strict'
+  if (window.top !== window.self) {
+    return
+  }
+  var frameAdvanceInterval
+  function startFrameAdvance() {
+    frameAdvanceInterval = setInterval(function () {
+      var stageFrame = document.getElementById('stageFrame')
+      var activityStatusElement = document.getElementById('activity-status')
+      if (
+        stageFrame &&
+        activityStatusElement &&
+        activityStatusElement.innerText.trim() !== 'Complete'
+      ) {
+        var frameRightButton =
+          stageFrame.contentDocument.querySelector('.FrameRight')
+        if (frameRightButton) {
+          frameRightButton.click()
+        }
+      }
+    }, settings.frameAdvanceClickSpeed)
+  }
+  function stopFrameAdvance() {
+    clearInterval(frameAdvanceInterval)
+  }
+  function clickAnswerChoiceButton(button) {
+    button.click()
+  }
+  function guessAnswer() {
+    var activityTitle = document.getElementById('activity-title').innerText
+    var stageFrame =
+      document.getElementById('stageFrame').contentWindow.document
+    var answerChoiceButtons = stageFrame.querySelectorAll(
+      'form .answer-choice-button'
+    )
+    var numOption = answerChoiceButtons.length
+    if (
+      [
+        'Instruction',
+        'Warm-Up',
+        'Summary',
+        'Lecture',
+        'Virtual Lab',
+        'Drafting',
+        'Prewriting',
+        'Part',
+      ].includes(activityTitle)
+    ) {
+      if (numOption > 0) {
+        var randomIndex = Math.floor(Math.random() * numOption)
+        clickAnswerChoiceButton(answerChoiceButtons[randomIndex])
+      } else {
+        if (
+          stageFrame
+            .querySelector('iframe')
+            .contentWindow.document.querySelectorAll('.answer-choice-button')
+            .length > 0
+        ) {
+          clickAnswerChoiceButton(
+            stageFrame
+              .querySelector('iframe')
+              .contentWindow.document.querySelectorAll('.answer-choice-button')[
+              randomIndex
+            ]
+          )
+        }
+      }
+      const btnCheck = document.querySelector('#btnCheck')
+      const doneBtn = document.querySelector('#done-complete')
+      if (btnCheck) {
+        btnCheck.click()
+      }
+      if (doneBtn) {
+        doneBtn.click()
+      }
+      var interval = setInterval(function () {}, 1500)
+      setTimeout(function () {
+        clearInterval(interval)
+      }, 10000)
+    }
+  }
+  function autoVocabLoop() {
+    var activityTitleElement = document.getElementById('activity-title')
+    if (
+      activityTitleElement &&
+      activityTitleElement.innerText === 'Vocabulary'
+    ) {
+      vocabFiller()
+    }
+    setTimeout(autoVocabLoop, settings.vocabFillerSpeed)
+  }
+  function vocabFiller() {
+    var activityTitleElement = document.getElementById('activity-title')
+    if (activityTitleElement.textContent === 'Vocabulary') {
+      var stageFrame = document.querySelector('#stageFrame').contentDocument
+      var wordBackground = stageFrame.querySelector('.word-background')
+      var wordTextbox = stageFrame.querySelector('.word-textbox')
+      var nextButton = stageFrame.querySelector(
+        '.uibtn.uibtn-blue.uibtn-arrow-next'
+      )
+      if (nextButton) {
+        var txt = wordBackground.value
+        wordTextbox.value = txt
+        var event = new Event('keyup')
+        wordTextbox.dispatchEvent(event)
+        nextButton.click()
+        setTimeout(function () {
+          if (wordBackground && wordTextbox) {
+            var txt = wordBackground.value
+            wordTextbox.value = txt
+            var event = new Event('keyup')
+            wordTextbox.dispatchEvent(event)
+            setTimeout(function () {
+              var playButtons = stageFrame.querySelectorAll(
+                '.playbutton.vocab-play'
+              )
+              if (playButtons.length > 0) {
+                playButtons[0].click()
+                playButtons[1].click()
+              }
+              nextButton.click()
+            }, settings.vocabFillerSpeed)
+          }
+        })
+      }
+    }
+  }
+  function showColumnsLoop() {
+    showColumns()
+    setTimeout(showColumnsLoop, settings.columnSpeed)
+  }
+  function showColumns() {
+    var iframes = document.querySelectorAll('iframe')
+    for (var i = 0; i < iframes.length; i++) {
+      var innerIframes = iframes[i].contentDocument.querySelectorAll('iframe')
+      for (var j = 0; j < innerIframes.length; j++) {
+        var rightColumn =
+          innerIframes[j].contentDocument.querySelector('.right-column')
+        var leftColumn =
+          innerIframes[j].contentDocument.querySelector('.left-column')
+        if (rightColumn) {
+          rightColumn.children[0].removeAttribute('style')
+        }
+        if (leftColumn) {
+          leftColumn.children[0].removeAttribute('style')
+        }
+      }
+    }
+  }
+  function startFrameBypass() {
+    var stageFrame = document.getElementById('stageFrame')
+    if (stageFrame) {
+      stageFrame.addEventListener('load', function () {
+        if (
+          stageFrame.contentWindow.API &&
+          stageFrame.contentWindow.API.E2020
+        ) {
+          stageFrame.contentWindow.API.E2020.freeMovement = true
+        }
+      })
+    }
+  }
+  function checkActivityStatusAndAdvance() {
+    var activityStatusElement = document.getElementById('activity-status')
+    var goRightButton = document.querySelector('.footnav.goRight')
+    if (
+      settings.activityAdvance &&
+      activityStatusElement &&
+      activityStatusElement.innerText.trim() === 'Complete'
+    ) {
+      if (goRightButton) {
+        goRightButton.click()
+      }
+    }
+  }
+  function activityAdvanceLoop() {
+    checkActivityStatusAndAdvance()
+    setTimeout(activityAdvanceLoop, settings.activityAdvanceSpeed)
+  }
+  function deleteInvisODiv() {
+    var stageFrame = document.getElementById('stageFrame')
+    stageFrame.addEventListener('load', function () {
+      var invisODiv = stageFrame.contentDocument.querySelector('#invis-o-div')
+      if (invisODiv) {
+        invisODiv.remove()
+      }
+    })
+  }
+  function labAdvance() {
+    var activityTitle = document.getElementById('activity-title').innerText
+    var stageFrame =
+      document.getElementById('stageFrame').contentWindow.document
+    if (activityTitle === 'Virtual Lab') {
+      setInterval(function () {
+        stageFrame.dispatchEvent(new KeyboardEvent('keydown', { keyCode: 32 }))
+        stageFrame.dispatchEvent(new KeyboardEvent('keyup', { keyCode: 32 }))
+      }, settings.labAdvanceSpeed)
+    }
+  }
+  function applyCustomTheme() {
+    if (settings.themes.enabled && settings.themes.imageUrl) {
+      GM_addStyle(`
+
+        body {
+
+          background-image: url(${settings.themes.imageUrl});
+
+          background-size: cover;
+
+          background-repeat: no-repeat;
+
+        }
+
+      `)
+    }
+  }
+  function antiLogout() {
+    setInterval(function () {
+      var timerStayButton = document.getElementById('timerStay')
+      if (timerStayButton) {
+        timerStayButton.click()
+      }
+    }, settings.antiLogoutSpeed)
+  }
+  function allowDuplicateTabs() {
+    if (typeof console === 'undefined') {
+      window.console = {
+        log: function () {},
+      }
+    }
+    localStorage.removeItem('RecentPageID')
+    localStorage.removeItem('WrongPageID')
+    var originalSetItem = localStorage.setItem
+    localStorage.setItem = function (key, value) {
+      if (key === 'RecentPageID' || key === 'WrongPageID') {
+        return
+      }
+      originalSetItem.apply(this, arguments)
+    }
+    var originalGetItem = localStorage.getItem
+    localStorage.getItem = function (key) {
+      if (key === 'RecentPageID' || key === 'WrongPageID') {
+        return null
+      }
+      return originalGetItem.apply(this, arguments)
+    }
+    Object.defineProperty(document, 'domain', {
+      value: 'core.learn.edgenuity.com',
+      writable: false,
+      configurable: false,
+    })
+    var originalAddEventListener = window.addEventListener
+    window.addEventListener = function (type, listener, options) {
+      if (type === 'storage') {
+        return
+      }
+      originalAddEventListener.apply(this, arguments)
+    }
+    Object.defineProperty(window, 'thisPageID', {
+      value: 10000000 * Math.random(),
+      writable: false,
+      configurable: false,
+    })
+  }
+  window.addEventListener('load', function () {
+    if (settings.frameAdvance) {
+      startFrameAdvance()
+    }
+    if (settings.skipIntros) {
+      deleteInvisODiv()
+    }
+    if (settings.frameBypass) {
+      startFrameBypass()
+    }
+    if (settings.answerGuesser) {
+      setInterval(guessAnswer, 500)
+    }
+    if (settings.showColumns) {
+      showColumnsLoop()
+    }
+    if (settings.autoVocab) {
+      autoVocabLoop()
+    }
+    if (settings.labAdvance) {
+      labAdvance()
+    }
+    if (settings.antiLogout) {
+      antiLogout()
+    }
+    if (settings.duplicateTabs) {
+      allowDuplicateTabs()
+    }
+    applyCustomTheme()
+    activityAdvanceLoop()
+  })
+})()
